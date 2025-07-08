@@ -1,0 +1,344 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title> My Movies</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #fff;
+            font-family: 'Times New Roman', serif;
+        }
+
+        nav {
+            background-color: #0b2239;
+            padding: 15px;
+        }
+
+            nav a {
+                font-family: Georgia, 'Times New Roman', serif;
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: normal;
+                font-size: 16px;
+            }
+
+        h1 {
+            margin-top: 25px;
+            font-size: 26px;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 10px;
+        }
+
+            .filters input[type="text"],
+            .filters input[type="number"] {
+                padding: 10px 12px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                width: 180px;
+                font-size: 14px;
+            }
+
+            .filters button {
+                background-color: #002744;
+                color: white;
+                border: none;
+                padding: 10px 12px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+                .filters button i {
+                    pointer-events: none;
+                }
+
+        #movies-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .movie-card {
+            width: 250px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            overflow: hidden;
+            font-family: 'Times New Roman', serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 580px;
+        }
+
+        .movie-image {
+            position: relative;
+        }
+
+            .movie-image img {
+                width: 100%;
+                height: 300px;
+                object-fit: cover;
+            }
+
+        .rating-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ffc107;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #d9534f;
+            color: white;
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .movie-content {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+            .movie-content h3 {
+                font-family: inherit;
+                font-size: 16px;
+                font-weight: bold;
+                margin: 0;
+                color: #1c1c1c;
+            }
+
+        .details {
+            color: #555;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .desc {
+            font-size: 13px;
+            color: #444;
+            min-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+            .tags span {
+                background-color: #f0f0f0;
+                padding: 4px 8px;
+                font-size: 12px;
+                border-radius: 15px;
+            }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            color: #777;
+            font-size: 12px;
+            margin-top: auto;
+        }
+
+            .footer strong {
+                font-weight: normal;
+                color: #000;
+            }
+
+            .footer span {
+                font-weight: bold;
+                margin-left: 4px;
+                color: #333;
+            }
+
+        .badge.red {
+            background-color: #d9534f;
+            color: white;
+            padding: 2px 8px;
+            font-size: 11px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">All Movies</a>
+        <a href="MyMovie.html">My Movies</a>
+        <a href="addMovie.html" id="addLink">Add New Movie</a>
+    </nav>
+
+    <h1>My Movies</h1>
+
+    <div class="filters">
+        <div>
+            <input id="titleFilter" type="text" placeholder="Search By Title">
+            <button onclick="filterByTitle()"><i class="fa fa-search">🔍</i></button>
+        </div>
+        <div>
+            <input id="startYear" type="number" placeholder="Start Year" min="1900" max="2099">
+            <button onclick="filterByYear()"><i class="fa fa-search">🔍</i></button>
+        </div>
+        <div>
+            <input id="endYear" type="number" placeholder="End Year" min="1900" max="2099">
+            <button onclick="filterByYear()"><i class="fa fa-search">🔍</i></button>
+        </div>
+    </div>
+
+    <div id="movies-container"></div>
+
+    <script>
+
+       
+
+        const BASE_URL = "https://proj.ruppin.ac.il/cgroup16/test2/tar1/api/Movies";
+
+        function isValidDate(d) {
+            return d && !isNaN(Date.parse(d));
+        }
+
+        function formatMillions(value) {
+            return value ? `$${(parseFloat(value) / 1_000_000).toFixed(1)}M` : "N/A";
+        }
+
+        function renderMovies(movies) {
+            const container = document.getElementById("movies-container");
+            container.innerHTML = "";
+
+            if (!movies || movies.length === 0) {
+                alert("😕 No movies found.");
+                return;
+            }
+
+            movies.forEach(movie => {
+                const release = isValidDate(movie.releaseDate) ? movie.releaseDate.split("T")[0] : "Unknown";
+                const year = movie.startYear || (release !== "Unknown" ? new Date(release).getFullYear() : "N/A");
+                const budget = formatMillions(movie.budget);
+                const boxOffice = formatMillions(movie.grossWorldwide);
+                const genresArray = Array.isArray(movie.genres) ? movie.genres : (movie.genres || "").split(",");
+                const genresTags = genresArray.map(g => `<span>${g.trim()}</span>`).join("");
+                const rating = movie.averageRating ? `⭐ ${movie.averageRating}/10` : "⭐ –";
+                const description = movie.description || "No description available.";
+                const duration = movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : "N/A";
+                const contentRatingText = movie.contentRating || (movie.isAdult ? 'R' : 'PG-13');
+                const contentRating = `<span class="badge red">${contentRatingText}</span>`;
+
+                const card = document.createElement("div");
+                card.className = "movie-card";
+
+                card.innerHTML = `
+                    <div class="movie-image">
+                        <img src="${movie.primaryImage}" alt="Movie Poster" />
+                        <button class="delete-btn" onclick="deleteMovie(${movie.id})"> Delete</button>
+                        <div class="rating-badge">${rating}</div>
+                    </div>
+                    <div class="movie-content">
+                        <h3>${movie.primaryTitle}</h3>
+                        <p class="details">${year} · ${duration} ${contentRating}</p>
+                        <p class="desc">${description.slice(0, 120)}...</p>
+                        <div class="tags">${genresTags}</div>
+                        <div class="footer">
+                            <span><strong>Budget:</strong> ${budget}</span>
+                            <span><strong>Box:</strong> ${boxOffice}</span>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function loadAllMovies() {
+            fetch(BASE_URL)
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch movies");
+                    return res.json();
+                })
+                .then(data => renderMovies(data))
+                .catch(err => alert("Error loading movies: " + err.message));
+        }
+
+        function deleteMovie(id) {
+            fetch(`${BASE_URL}/${id}`, {
+                method: "DELETE"
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to delete movie");
+                    alert("Movie deleted");
+                    loadAllMovies();
+                })
+                .catch(err => alert(err.message));
+        }
+
+        function filterByTitle() {
+            const title = document.getElementById("titleFilter").value;
+            if (!title) {
+                alert("Please enter a title.");
+                return;
+            }
+
+            fetch(`${BASE_URL}?title=${encodeURIComponent(title)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch movies by title");
+                    return res.json();
+                })
+                .then(data => renderMovies(data))
+                .catch(err => alert("Error filtering by title: " + err.message));
+        }
+
+        function filterByYear() {
+            const start = document.getElementById("startYear").value;
+            const end = document.getElementById("endYear").value;
+
+            if (!start || !end) {
+                alert("Please select both start and end years.");
+                return;
+            }
+
+            const startDate = `${start}-01-01`;
+            const endDate = `${end}-12-31`;
+
+            fetch(`${BASE_URL}/from/${startDate}/until/${endDate}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch by year");
+                    return res.json();
+                })
+                .then(data => renderMovies(data))
+                .catch(err => alert("Error filtering by year: " + err.message));
+        }
+
+        window.onload = loadAllMovies;
+    </script>
+
+</body>
+</html>
+

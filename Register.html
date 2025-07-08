@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+</head>
+<body>
+    <h2>Register</h2>
+    <form id="registerForm">
+        <input type="text" id="name" placeholder="Name" required><br>
+        <input type="email" id="regEmail" placeholder="Email" required><br>
+        <input type="password" id="regPassword" placeholder="Password" required><br>
+        <button type="submit">Register</button>
+    </form>
+    <p id="registerError" style="color:red;"></p>
+    <p><a href="login.html">Back to login</a></p>
+
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
+
+            if (!/^[A-Za-z]{2,}$/.test(name)) {
+                document.getElementById("registerError").innerText = "Name must be at least 2 letters and letters only.";
+                return;
+            }
+
+            if (!/^(?=.*[A-Z])(?=.*[0-9]).{8,}$/.test(password)) {
+                document.getElementById("registerError").innerText =
+                    "Password must be at least 8 characters, include 1 uppercase letter and 1 number.";
+                return;
+            }
+
+
+            const users = JSON.parse(localStorage.getItem("users") || "[]");
+            if (users.some(u => u.email === email)) {
+                document.getElementById("registerError").innerText = "Email already registered.";
+                return;
+            }
+
+            users.push({ name, email, password, active: true });
+            localStorage.setItem("users", JSON.stringify(users));
+            alert("Registration successful!");
+            location.href = "login.html";
+        });
+    </script>
+</body>
+</html>
+
+
