@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required><br>
+        <input type="password" id="password" placeholder="Password" required><br>
+        <button type="submit">Login</button>
+    </form>
+    <p id="loginError" style="color:red;"></p>
+    <p>New user? <a href="register.html">Register here</a></p>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const users = JSON.parse(localStorage.getItem("users") || "[]");
+            const user = users.find(u => u.email === email);
+
+            if (user && user.password === password && user.active !== false) {
+             
+                localStorage.setItem("loggedInName", user.name);
+
+                
+                location.href = "index.html";
+            } else {
+                document.getElementById("loginError").innerText = "Invalid email or password";
+            }
+        });
+    </script>
+</body>
+</html>
+
+

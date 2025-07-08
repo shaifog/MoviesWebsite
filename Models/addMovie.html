@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Add New Movie</title>
+    <style>
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            padding: 40px;
+            background-color: #f9f9f9;
+        }
+
+        nav {
+            background-color: #0b2239;
+            padding: 15px;
+        }
+
+            nav a {
+                font-family: Georgia, 'Times New Roman', serif;
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: normal;
+                font-size: 16px;
+            }
+
+                nav a.active {
+                    color: #6fdc98;
+                    text-decoration: underline;
+                }
+
+
+        form {
+            max-width: 400px;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 20px;
+            background-color: #0b2239;
+            color: white;
+            padding: 10px;
+            border: none;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #formError {
+            color: red;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" id="nav-index">All Movies</a>
+        <a href="MyMovie.html" id="nav-my">My Movies</a>
+        <a href="addMovie.html" id="nav-add">Add New Movie</a>
+        <span id="userGreeting" style="float:right; margin-right: 15px; color:white;"></span>
+    </nav>
+
+
+
+    <form id="movieForm">
+        <h2>Add New Movie</h2>
+
+        <label for="primaryTitle">Primary Title*</label>
+        <input type="text" id="primaryTitle" required />
+
+        <label for="primaryImage">Primary Image URL*</label>
+        <input type="text" id="primaryImage" required />
+
+        <label for="year">Year*</label>
+        <input type="number" id="year" required min="1900" max="2099" />
+
+        <label for="releaseDate">Release Date*</label>
+        <input type="date" id="releaseDate" required />
+
+        <label for="language">Language*</label>
+        <input type="text" id="language" required list="langList" />
+        <datalist id="langList">
+            <option value="English" />
+            <option value="Hebrew" />
+            <option value="French" />
+            <option value="Spanish" />
+        </datalist>
+
+        <label for="genres">Genres*</label>
+        <input type="text" id="genres" required list="genresList" />
+        <datalist id="genresList">
+            <option value="Action">
+            <option value="Drama">
+            <option value="Comedy">
+            <option value="Romance">
+            <option value="Thriller">
+            <option value="Mystery">
+            <option value="Animation">
+            <option value="Family">
+            <option value="Horror">
+            <option value="Sci-Fi">
+            <option value="Adventure">
+            <option value="Documentary">
+        </datalist>
+
+        <label for="runtimeMinutes">Runtime Minutes*</label>
+        <input type="number" id="runtimeMinutes" required min="1" />
+
+        <button type="submit">Add Movie</button>
+        <div id="formError"></div>
+    </form>
+
+    <script>
+        if (!localStorage.getItem("loggedInName")) {
+            location.href = "login.html";
+        }
+
+        document.getElementById("movieForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const error = document.getElementById("formError");
+            error.textContent = "";
+
+            const releaseRaw = document.getElementById("releaseDate").value;
+            const release = new Date(releaseRaw);
+            if (isNaN(release)) {
+                error.textContent = "Invalid release date";
+                return;
+            }
+
+            const movie = {
+                id: Math.floor(Math.random() * 1000000),
+                primaryTitle: document.getElementById("primaryTitle").value.trim(),
+                primaryImage: document.getElementById("primaryImage").value.trim(),
+                Year: parseInt(document.getElementById("year").value),
+                releaseDate: release.toISOString(),
+                language: document.getElementById("language").value.trim(),
+                genres: document.getElementById("genres").value.trim(),
+                runtimeMinutes: parseInt(document.getElementById("runtimeMinutes").value),
+
+                // ברירת מחדל
+                url: "",
+                description: "",
+                Budget: 0,
+                grossWorldwide: 0,
+                isAdult: false,
+                averageRating: 0,
+                numVotes: 0
+            };
+
+            fetch("https://proj.ruppin.ac.il/cgroup16/test2/tar1/api/Movies", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(movie)
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error("Server error");
+                    alert("✅ Movie added successfully!");
+                    document.getElementById("movieForm").reset();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("❌ Failed to add movie: " + err.message);
+                });
+        });
+    </script>
+</body>
+</html>
